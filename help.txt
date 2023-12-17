@@ -1,3 +1,5 @@
+from https://github.com/plottertools/hatched
+
 vpype hatched --levels 64 128 192 -s 0.5 -p 4 input.jpg layout a4 write output.svg
 
 -c flag makes it circular
