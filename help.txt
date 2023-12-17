@@ -1,3 +1,36 @@
 vpype hatched --levels 64 128 192 -s 0.5 -p 4 input.jpg layout a4 write output.svg
 
 -c flag makes it circular
+
+$ vpype hatched --help
+Usage: vpype hatched [OPTIONS] FILENAME
+
+  Generate hatched pattern from an image.
+
+  The hatches generated are in the coordinate of the input image. For
+  example, a 100x100px image with generate hatches whose bounding box
+  coordinates are (0, 0, 100, 100). The `--scale` option, by resampling the
+  input image, indirectly affects the generated bounding box. The `--pitch`
+  parameter sets the densest hatching frequency,
+
+Options:
+  --levels INTEGER...             Pixel value of the 3 thresholds between
+                                  black, dark, light and white zones (0-255).
+  -s, --scale FLOAT               Scale factor to apply to the image size.
+  -i, --interpolation [linear|nearest]
+                                  Interpolation used for scaling.
+  -b, --blur INTEGER              Blur radius to apply to the image before
+                                  applying thresholds.
+  -p, --pitch LENGTH              Hatching pitch for the densest zones. This
+                                  option understands supported units.
+  -x, --invert                    Invert the image (and levels) before
+                                  applying thresholds.
+  -c, --circular                  Use circular instead of diagonal hatches.
+  -o, --center                    Origin of circles relative to the image size.
+                                  For example, (0.5, 0.5) corresponds to the 
+                                  center of the image.
+  -a, --angle                     Angle for diagonal hatches (in degrees)
+  -d, --show-plot                 Display the contours and resulting pattern
+                                  using matplotlib.
+  -l, --layer LAYER               Target layer or 'new'.
+  --help                          Show this message and exit.
