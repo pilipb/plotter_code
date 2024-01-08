@@ -32,8 +32,8 @@ input_path = args.input
 output_path = args.output
 n = args.n
 res = 10 # steps per pixel
-a_init = 20 # amplitude
-f_init = 5 # frequency
+a_init = 10 # amplitude
+f_init = 50 # frequency
 
 # resize function
 def resize(img, height):
@@ -90,11 +90,13 @@ for row in range(new_h):
 
             # change amplitude and frequency based on pixel brightness
             a = 255 * a_init / pix_val # invert image
-            f = 255 * f_init/ pix_val
+            f = pix_val * f_init/ 255
 
             # calculate sine wave
-            x = width + step * ratio/res
-            y = height + sine_wave(last_point.real, a, step/f)
+            x = width + step * ratio/res 
+            # account for phase shift due to frequency modulation by scaling step size
+            step = step / f
+            y = height + sine_wave(last_point.real, a, step*f)
 
             # add point to line
             new_point = complex(x, y)
@@ -104,7 +106,7 @@ for row in range(new_h):
     cols = reversed(cols)
 
     # at the end of each row, connect to start of next row (which is height + ratio)
-    line.append(Line(last_point, complex(last_point.real, last_point.imag + ratio)))
+    line.append(Line(complex(last_point.real, last_point.imag - ratio), complex(last_point.real, last_point.imag)))
     
 
 
