@@ -77,7 +77,10 @@ for row in range(new_h):
     height = (row*ratio)
     last_point = complex(0, height)
 
-    for col in range(new_w):
+    # reverse direction of line every other row
+    cols = range(new_w)
+
+    for col in cols:
         # get pixel value
         pix_val = image[row, col]
         width = (col*ratio)
@@ -98,18 +101,21 @@ for row in range(new_h):
             line.append(Line(last_point, new_point))
             last_point = new_point
 
+    cols = reversed(cols)
+
+    # at the end of each row, connect to start of next row (which is height + ratio)
+    line.append(Line(last_point, complex(last_point.real, last_point.imag + ratio)))
+    
+
+
+
 # convert path to svg
 wsvg(line, filename='images/path.svg')
 # preview svg as png
 from cairosvg import svg2png
 svg2png(url='images/path.svg', write_to='images/path.png')
-
-# show images side by side
-fig, ax = plt.subplots(1, 2)
-ax[0].imshow(image, cmap='gray')
-ax[1].imshow(cv2.imread('images/path.png'))
+plt.imshow(plt.imread('images/path.png'))
 plt.show()
-
-
-
+plt.imshow(image, cmap='gray')
+plt.show()
 
