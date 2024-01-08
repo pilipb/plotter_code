@@ -31,9 +31,9 @@ args = parser.parse_args()
 input_path = args.input
 output_path = args.output
 n = args.n
-res = 10 # steps per pixel
+res_init = 10 # steps per pixel
 a_init = 10 # amplitude
-f_init = 50 # frequency
+f_init = 10 # frequency
 
 # resize function
 def resize(img, height):
@@ -45,11 +45,11 @@ def resize(img, height):
     return cv2.resize(img, (int(w * ratio), height))
 
 # sine wave generator
-def sine_wave(last_x, amp, step_x):
+def sine_wave(last_x, amp, step_x, freq):
     '''
     Generate sine wave continously with amplitude modulated by pixel brightness
     '''
-    return np.sin((last_x + step_x)/np.pi) * amp
+    return np.sin(freq * (last_x + step_x)/np.pi) * amp
 
 # import image
 image = cv2.imread(input_path)
@@ -84,6 +84,9 @@ for row in range(new_h):
         # get pixel value
         pix_val = image[row, col]
         width = (col*ratio)
+
+        # scale resolution based on pixel brightness
+        res = int(255/pix_val * res_init)
         
         # draw sine wave with resolution res
         for step in range(res):
@@ -94,9 +97,9 @@ for row in range(new_h):
 
             # calculate sine wave
             x = width + step * ratio/res 
-            # account for phase shift due to frequency modulation by scaling step size
-            step = step / f
-            y = height + sine_wave(last_point.real, a, step*f)
+            # TODO: account for phase shift due to frequency modulation by scaling step size
+            
+            y = height + sine_wave(last_point.real, a, step*f, f)
 
             # add point to line
             new_point = complex(x, y)
