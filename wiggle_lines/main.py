@@ -33,7 +33,7 @@ output_path = args.output
 n = args.n
 res_init = 10 # steps per pixel
 a_init = 10 # amplitude
-f_init = 10 # frequency
+f_init = 0.1 # frequency
 
 # resize function
 def resize(img, height):
@@ -72,28 +72,33 @@ new_h, new_w = image.shape
 # create path
 line = Path()
 # centre of each row lies at integer value of row index
+# reverse direction of line every other row
+cols = range(new_w)
+last_point = complex(0, 0)
+
 for row in range(new_h):
     # draw horizontal line from left to right
     height = (row*ratio)
-    last_point = complex(0, height)
-
-    # reverse direction of line every other row
-    cols = range(new_w)
+    
 
     for col in cols:
         # get pixel value
         pix_val = image[row, col]
         width = (col*ratio)
+        # change amplitude and frequency based on pixel brightness
+        a = 255 * a_init / pix_val # invert image
+        f = pix_val * f_init/ 255
 
-        # scale resolution based on pixel brightness
-        res = int(255/pix_val * res_init)
+        # scale resolution based on freq
+        res = int(res_init *f_init/f)
         
-        # draw sine wave with resolution res
-        for step in range(res):
+        ress = range(res)
+        # switch direction of line every other row
+        if row % 2 == 1:
+            ress = ress[::-1]
 
-            # change amplitude and frequency based on pixel brightness
-            a = 255 * a_init / pix_val # invert image
-            f = pix_val * f_init/ 255
+        # draw sine wave with resolution res
+        for step in ress:
 
             # calculate sine wave
             x = width + step * ratio/res 
@@ -106,13 +111,12 @@ for row in range(new_h):
             line.append(Line(last_point, new_point))
             last_point = new_point
 
-    cols = reversed(cols)
-
     # at the end of each row, connect to start of next row (which is height + ratio)
-    line.append(Line(complex(last_point.real, last_point.imag - ratio), complex(last_point.real, last_point.imag)))
-    
-
-
+    line_point = complex(last_point.real, last_point.imag + ratio)
+    line.append(Line(complex(last_point.real, last_point.imag), line_point))
+    # reverse direction of line every other row
+    last_point = line_point
+    cols = cols[::-1]
 
 # convert path to svg
 wsvg(line, filename='images/path.svg')
@@ -121,6 +125,6 @@ from cairosvg import svg2png
 svg2png(url='images/path.svg', write_to='images/path.png')
 plt.imshow(plt.imread('images/path.png'))
 plt.show()
-plt.imshow(image, cmap='gray')
-plt.show()
+# plt.imshow(image, cmap='gray')
+# plt.show()
 
