@@ -31,7 +31,7 @@ args = parser.parse_args()
 input_path = args.input
 output_path = args.output
 n = args.n
-res_init = 10 # steps per pixel
+res_init = 25 # steps per pixel
 a_init = 10 # amplitude
 f_init = 0.1 # frequency
 
@@ -79,8 +79,6 @@ last_point = complex(0, 0)
 for row in range(new_h):
     # draw horizontal line from left to right
     height = (row*ratio)
-    
-
     for col in cols:
         # get pixel value
         pix_val = image[row, col]
@@ -88,11 +86,8 @@ for row in range(new_h):
         # change amplitude and frequency based on pixel brightness
         a = 255 * a_init / pix_val # invert image
         f = pix_val * f_init/ 255
-
-        # scale resolution based on freq
-        res = int(res_init *f_init/f)
         
-        ress = range(res)
+        ress = range(res_init)
         # switch direction of line every other row
         if row % 2 == 1:
             ress = ress[::-1]
@@ -101,7 +96,7 @@ for row in range(new_h):
         for step in ress:
 
             # calculate sine wave
-            x = width + step * ratio/res 
+            x = width + step * ratio/res_init 
             # TODO: account for phase shift due to frequency modulation by scaling step size
             
             y = height + sine_wave(last_point.real, a, step*f, f)
