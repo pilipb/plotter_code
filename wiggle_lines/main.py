@@ -20,85 +20,96 @@ import argparse
 from svgpathtools import Path, Line, wsvg
 from cairosvg import svg2png
 
-# Argument parser
-parser = argparse.ArgumentParser()
-parser.add_argument('-input', type=str, default='images/input.jpeg', help='path to input image')
-parser.add_argument('-output', type=str, default='images/output.jpeg', help='path to output image')
-parser.add_argument('-n', type=int, default=50, help='number of lines')
-args = parser.parse_args()
-
-input_path = args.input
-output_path = args.output
-n = args.n
-res_init = 20  # steps per pixel
-a_init =  35 # amplitude
-f_init = 5  # frequency
-
-# Resize function
+# resize function
 def resize(img, height):
     h, w, _ = img.shape
     ratio = height / h
     return cv2.resize(img, (int(w * ratio), height))
 
-# Sine wave generator
+# sine wave generator
 def sine_wave(phase, amp):
     return np.sin(phase) * amp
 
-# Import image
-image = cv2.imread(input_path)
-h, w, _ = image.shape
-ratio = h / n
+# main function
+if __name__ == '__main__':
 
-# Resize image
-image = resize(image, n)
+    # argument parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-input', type=str, default='images/input2.jpeg', help='path to input image')
+    parser.add_argument('-output', type=str, default='images/output.jpeg', help='path to output image')
+    parser.add_argument('-n', type=int, default=30, help='number of lines')
+    args = parser.parse_args()
 
-# Convert to grayscale
-image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-new_h, new_w = image.shape
-# invert image
-image = 255 - image
+    input_path = args.input
+    output_path = args.output
+    n = args.n
 
-# Create path
-line = Path()
-cols = range(new_w)
-last_point = complex(0, 0)
+    # import image
+    image = cv2.imread(input_path)
+    h, w, _ = image.shape
+    ratio = h / n
 
-for row in range(new_h):
-    height = row * ratio
-    for col in cols:
-        pix_val = image[row, col]
-        width = col * ratio
-        a = a_init * pix_val/255
-        f = f_init * pix_val/255
+    # resize, grayscale, invert
+    image = resize(image, n)
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    new_h, new_w = image.shape
+    image = 255 - image
 
-        ress = range(res_init)
-        if row % 2 == 1:
-            ress = ress[::-1]
+    # define parameters
+    res_init = 15  # steps per pixel
+    a_init = ratio * 0.7 # max amplitude is 70% of pixel height
+    f_init = np.pi
 
-        phase = 0
-        for step in ress:
-            x = width + step * ratio / res_init
-            phase += f * 2 * np.pi / res_init  # Account for phase shift due to frequency modulation
-            y = height + sine_wave(phase, a)
+    # create path
+    line = Path()
+    cols = range(new_w)
+    last_point = complex(0, 0)
 
-            new_point = complex(x, y)
-            line.append(Line(last_point, new_point))
-            last_point = new_point
+    # for each row, draw horizontal line
+    for row in range(new_h):
+        height = row * ratio
+        for col in cols:
+            # get pixel value
+            pix_val = image[row, col]
+            width = col * ratio
+            # change amplitude and frequency based on pixel value
+            a = a_init * pix_val/255
+            f = f_init * pix_val/255
+            ress = range(res_init)
+            if row % 2 == 1:
+                ress = ress[::-1]
 
-    line_point = complex(last_point.real, last_point.imag + ratio)
-    line.append(Line(complex(last_point.real, last_point.imag), line_point))
-    last_point = line_point
-    cols = cols[::-1]
+            # draw sine wave
+            phase = 0
+            for step in ress:
+                x = width + step * ratio / res_init
+                phase += f * 2 * np.pi / res_init  # account for phase shift due to frequency modulation
+                y = height + sine_wave(phase, a)
+                # add line to path
+                new_point = complex(x, y)
+                line.append(Line(last_point, new_point))
+                last_point = new_point
 
-# Convert path to svg
-wsvg(line, filename='images/path.svg')
+        # connect end of line to start of next line
+        line_point = complex(last_point.real, last_point.imag + ratio)
+        line.append(Line(complex(last_point.real, last_point.imag), line_point))
+        last_point = line_point
+        cols = cols[::-1]
 
-# Preview svg as png
-svg2png(url='images/path.svg', write_to='images/path.png')
+    # convert path to svg
+    wsvg(line, filename='images/path.svg')
 
-# Display images
-plt.imshow(plt.imread('images/path.png'))
-plt.show()
+    # preview svg as png
+    svg2png(url='images/path.svg', write_to='images/path.png')
 
-plt.imshow(image, cmap='gray')
-plt.show()
+    # Display images side by side
+    plt.figure(figsize=(12, 6)) 
+    # display the first image (sine wave)
+    plt.subplot(1, 2, 1)
+    plt.imshow(plt.imread('images/path.png'))
+    plt.title('Sine Wave Image')
+    # display the second image (original grayscale image)
+    plt.subplot(1, 2, 2)
+    plt.imshow(image, cmap='gray')
+    plt.title('Original Grayscale Image')
+    plt.show()
