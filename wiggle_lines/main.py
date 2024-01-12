@@ -31,9 +31,9 @@ args = parser.parse_args()
 input_path = args.input
 output_path = args.output
 n = args.n
-res_init = 25 # steps per pixel
+res_init = 15 # steps per pixel
 a_init = 10 # amplitude
-f_init = 0.1 # frequency
+f_init = 0.7 # frequency
 
 # resize function
 def resize(img, height):
