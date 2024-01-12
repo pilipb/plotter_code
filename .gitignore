@@ -2,3 +2,5 @@
 /*.jpg
 .DS_Store
 .DS_Store
+wiggle_lines/images/*.png
+wiggle_lines/images/*.svg
