@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     # argument parser
     parser = argparse.ArgumentParser()
-    parser.add_argument('-input', type=str, default='images/input2.jpeg', help='path to input image')
+    parser.add_argument('-input', type=str, default='images/input.jpeg', help='path to input image')
     parser.add_argument('-output', type=str, default='images/output.jpeg', help='path to output image')
     parser.add_argument('-n', type=int, default=30, help='number of lines')
     args = parser.parse_args()
