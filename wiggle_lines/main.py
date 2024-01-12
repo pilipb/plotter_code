@@ -13,113 +13,92 @@ Run command line file to generate wiggle lines
 10. save image
 
 '''
-
-# imports
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import argparse
-from svgpathtools import Path, Line, svg2paths, wsvg
+from svgpathtools import Path, Line, wsvg
+from cairosvg import svg2png
 
-# argument parser
+# Argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument('-input', type=str, default='images/input.jpeg', help='path to input image')
 parser.add_argument('-output', type=str, default='images/output.jpeg', help='path to output image')
 parser.add_argument('-n', type=int, default=50, help='number of lines')
-
 args = parser.parse_args()
+
 input_path = args.input
 output_path = args.output
 n = args.n
-res_init = 15 # steps per pixel
-a_init = 10 # amplitude
-f_init = 0.7 # frequency
+res_init = 20  # steps per pixel
+a_init =  35 # amplitude
+f_init = 5  # frequency
 
-# resize function
+# Resize function
 def resize(img, height):
-    '''
-    Resize image to height pixels
-    '''
-    h, w, c = img.shape
+    h, w, _ = img.shape
     ratio = height / h
     return cv2.resize(img, (int(w * ratio), height))
 
-# sine wave generator
-def sine_wave(last_x, amp, step_x, freq):
-    '''
-    Generate sine wave continously with amplitude modulated by pixel brightness
-    '''
-    return np.sin(freq * (last_x + step_x)/np.pi) * amp
+# Sine wave generator
+def sine_wave(phase, amp):
+    return np.sin(phase) * amp
 
-# import image
+# Import image
 image = cv2.imread(input_path)
-
-# get original image size
-h, w, c = image.shape # height, width, channels
-# ratio of original image size to number of lines
+h, w, _ = image.shape
 ratio = h / n
 
-# resize image to number of lines = height pixels
+# Resize image
 image = resize(image, n)
 
-# convert to grayscale
-image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # only 1 channel
-# invert image
-# image = cv2.bitwise_not(image)
-
+# Convert to grayscale
+image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 new_h, new_w = image.shape
+# invert image
+image = 255 - image
 
-# create path
+# Create path
 line = Path()
-# centre of each row lies at integer value of row index
-# reverse direction of line every other row
 cols = range(new_w)
 last_point = complex(0, 0)
 
 for row in range(new_h):
-    # draw horizontal line from left to right
-    height = (row*ratio)
+    height = row * ratio
     for col in cols:
-        # get pixel value
         pix_val = image[row, col]
-        width = (col*ratio)
-        # change amplitude and frequency based on pixel brightness
-        a = 255 * a_init / pix_val # invert image
-        f = pix_val * f_init/ 255
-        
+        width = col * ratio
+        a = a_init * pix_val/255
+        f = f_init * pix_val/255
+
         ress = range(res_init)
-        # switch direction of line every other row
         if row % 2 == 1:
             ress = ress[::-1]
 
-        # draw sine wave with resolution res
+        phase = 0
         for step in ress:
+            x = width + step * ratio / res_init
+            phase += f * 2 * np.pi / res_init  # Account for phase shift due to frequency modulation
+            y = height + sine_wave(phase, a)
 
-            # calculate sine wave
-            x = width + step * ratio/res_init 
-            # TODO: account for phase shift due to frequency modulation by scaling step size
-            
-            y = height + sine_wave(last_point.real, a, step*f, f)
-
-            # add point to line
             new_point = complex(x, y)
             line.append(Line(last_point, new_point))
             last_point = new_point
 
-    # at the end of each row, connect to start of next row (which is height + ratio)
     line_point = complex(last_point.real, last_point.imag + ratio)
     line.append(Line(complex(last_point.real, last_point.imag), line_point))
-    # reverse direction of line every other row
     last_point = line_point
     cols = cols[::-1]
 
-# convert path to svg
+# Convert path to svg
 wsvg(line, filename='images/path.svg')
-# preview svg as png
-from cairosvg import svg2png
+
+# Preview svg as png
 svg2png(url='images/path.svg', write_to='images/path.png')
+
+# Display images
 plt.imshow(plt.imread('images/path.png'))
 plt.show()
-# plt.imshow(image, cmap='gray')
-# plt.show()
 
+plt.imshow(image, cmap='gray')
+plt.show()
