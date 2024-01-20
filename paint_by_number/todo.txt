@@ -1,0 +1,7 @@
+Create a paint by numbers script:
+
+1. segment image into n colours using k-means clustering
+2. set a number for each colour
+3. create a new image with the same dimensions as the original
+4. at the centre of each cluster, write the number corresponding to that colour
+
